@@ -30,7 +30,10 @@ export default function ApiReqLoop() {
   useEffect(() => {
     fetch('http://localhost:5000/user').then(res => res.json()).then(data => setUser(data))
 
-  }, [user])
+  // }, [user]) this is the reason of looping 
+  // whenever user changes, it will fetch again and again making it a infinite loop
+  }, []) // this on ther otherHand will only fetch once at Mount point..... 
+  // so no.1 PROBLEM is fixed!!!!
 
   return (
     <div className='flex flex-col gap-20'>
