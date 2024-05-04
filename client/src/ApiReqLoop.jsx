@@ -6,7 +6,37 @@ export default function ApiReqLoop() {
   const [user, setUser] = useState(null)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
+ 
+ 
+  useEffect(() => {
 
+
+    fetch('http://localhost:5000/user').then(res => res.json()).then(data => setUser(data))
+
+    
+    // these are the callback trigger that runs when-ever out component 
+    // re-renders --- thats why we were seeing mulitple of the same message from
+    // ther server
+    // so this solves the 2-nd problem.............
+    socket.on('connect', ()=>{
+      console.log('connected ');
+    });
+    
+    socket.on('message', (message) => {
+      setMessage('')
+      setMessages(prev => [...prev, message])
+    })
+    
+    // this is the callback for the dismount 
+    return () => {
+      socket.off('connect', ()=>{console.log('disconnet');
+      });
+      socket.off('disconnect');
+      socket.off('message');
+    };
+
+  }, [])
+  
   const handleMessage = (message) => {
     const payload = { sender: user?.email, message }
     socket.emit('message', payload)
@@ -16,24 +46,8 @@ export default function ApiReqLoop() {
     e.preventDefault()
     handleMessage(message)
   }
-  const onConnect = () => {
-    console.log('connected')
-  }
 
-  socket.on('connect', onConnect);
-  socket.on('disconnect', (event) => console.log('disconnected ' + event));
-  socket.on('message', (message) => {
-    setMessage('')
-    setMessages(prev => [...prev, message])
-  })
 
-  useEffect(() => {
-    fetch('http://localhost:5000/user').then(res => res.json()).then(data => setUser(data))
-
-  // }, [user]) this is the reason of looping 
-  // whenever user changes, it will fetch again and again making it a infinite loop
-  }, []) // this on ther otherHand will only fetch once at Mount point..... 
-  // so no.1 PROBLEM is fixed!!!!
 
   return (
     <div className='flex flex-col gap-20'>
